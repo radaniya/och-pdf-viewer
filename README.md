@@ -68,6 +68,8 @@ OCH 電カル環境用の PDF Viewer
 
 `http://PATH/TO/pdfviewer/index.html?user=USER_NAME&pass=PASSWORD&pid=FOLDERNAME`
 
+[sample](http://localhost/index.html?user=username1&pass=password1&pid=001)
+
 
 📝 Memo
 ----
