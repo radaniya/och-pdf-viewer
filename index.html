@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="sjis">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Viewer</title>
+  <script>
+    function post_open() {
+      const url = new URL(window.location.href);
+      const params = url.searchParams;
+      // // ポップアップブロックを解除できれば以下を使うとよい
+      // const features = 'toolbar=no,location=no,directories=no,status=no,menubar=no'
+      //   + 'scrollbars=yes,left=20,top=20,resizable=yes,width=800,height=740,title=no';
+      // window.open('', 'new_window', features);
+      let html = '<form id="form1" stype="display:none;">';
+      const data = {
+        user: params.get('user'),  //'username1',
+        pass: params.get('pass'),  //'password1',
+        pid: params.get('pid'),  //'foldername'
+      };
+      for (let x in data) {
+        if (data[x] == undefined || data[x] == null) continue;
+        const val = data[x].replace(/'/g, '\'');
+        html += `<input type='hidden' name='${x}' value='${val}'>`;
+      }
+      html += '</form>';
+      document.body.innerHTML = html;
+      const form1 = document.getElementById('form1');
+      console.log(form1);
+      form1.action = 'pdfviewer.php';
+      form1.method = 'POST';
+      // // ポップアップブロックを解除できれば以下を使うとよい
+      // form1.target = 'new_window';
+      form1.submit();
+      form1.remove();
+      window.opener = window;
+      window.close();
+    }
+  </script>
+</head>
+
+<body onLoad='post_open();'></body>
+
+</html>
