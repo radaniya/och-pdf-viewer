@@ -21,21 +21,21 @@ $password = isset($_POST['pass']) ? $_POST['pass'] : '';
 $foldername = isset($_POST['pid']) ? $_POST['pid'] : '';
 
 if (!isset($users[$user]) || $users[$user] !== $password) {
-  header("Location: 401.html");
+  header("Location: errorpage/401.html");
   exit();
 }
 
 $pdfFolder = $pdfRootFolder . DIRECTORY_SEPARATOR . $foldername;
 
 if (!is_dir($pdfFolder)) {
-  header("Location: 404.html");
+  header("Location: errorpage/404.html");
   exit();
 }
 
 $pdfFiles = glob($pdfFolder . DIRECTORY_SEPARATOR . "*.pdf");
 
 if (count($pdfFiles) === 0) {
-  header("Location: 404.html");
+  header("Location: errorpage/404.html");
   exit();
 }
 
