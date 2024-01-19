@@ -80,6 +80,7 @@ foreach ($pdfFiles as $key => $pdfFile) {
         html, body {
             padding: 0;
             margin: 0;
+            overflow: hidden;
         }
         ul, li {
             margin: 0;
