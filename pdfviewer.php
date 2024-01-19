@@ -128,12 +128,16 @@ foreach ($pdfFiles as $key => $pdfFile) {
             color: white;
             margin-top: 16px;
             margin-bottom: 8px;
-            padding-left: 4px;
+            padding-left: 8px;
         }
         .category-content {
             color: white;
             padding-left: 8px;
             font-size: 0.9em;
+        }
+        .pdf-item-active {
+          font-weight: bold;
+          color: tomato;
         }
     </style>
 </head>
@@ -153,7 +157,7 @@ foreach ($pdfFiles as $key => $pdfFile) {
             <div class="category-content">
               <ul>
                 <?php foreach ($pdfs as $pdf): ?>
-                  <li><a href="#" data-pid="<?php echo $foldername; ?>" data-pdf="<?php echo basename($pdf['file']); ?>" onclick="showPDF(this); return false;"><?php echo $pdf['name']; ?></a></li>
+                  <li><a href="#" data-pid="<?php echo $foldername; ?>" data-pdf="<?php echo basename($pdf['file']); ?>" onclick="showPDF(this); return false;" class="pdf-item"><?php echo $pdf['name']; ?></a></li>
                 <?php endforeach; ?>
               </ul>
             </div>
@@ -175,10 +179,20 @@ foreach ($pdfFiles as $key => $pdfFile) {
     doc.open();
     doc.write('<html><body style="margin: 0;"><div style="height: 56px; display: flex; align-items: center; justify-content: center; color:white; background-color: #323639;">カルテを選択してください</div><html>');
     doc.close();
+    function resetActive() {
+      const items = document.getElementsByClassName('pdf-item-active');
+      if (items.length > 0) {
+        for (let i = 0; i < items.length; ++i) {
+          items[i].classList.remove('pdf-item-active');
+        }
+      }
+    }
     function showPDF(element) {
       const pdf = element.getAttribute('data-pdf');
       const pid = element.getAttribute('data-pid');
       document.getElementById('viewer').src = 'getpdf.php?file=' + pdf + '&pid=' + pid;
+      resetActive();
+      element.classList.add("pdf-item-active");
     }
   </script>
 </body>
