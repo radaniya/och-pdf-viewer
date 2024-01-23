@@ -87,6 +87,7 @@ foreach ($pdfFilesAdm as $key => $pdfFile) {
             padding: 0;
             margin: 0;
             overflow: hidden;
+            font-family: "Helvetica Neue", "Helvetica", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Arial", "Yu Gothic", "Meiryo", sans-serif;
         }
         ul, li {
             margin: 0;
@@ -124,6 +125,7 @@ foreach ($pdfFilesAdm as $key => $pdfFile) {
         }
         .header-title {
             font-size: 1.5em;
+            line-height: 1.5em;
             color: white;
         }
         .header-shadow {
@@ -131,6 +133,14 @@ foreach ($pdfFilesAdm as $key => $pdfFile) {
             background: linear-gradient(#222629, #323639);
         }
         .category-header {
+            border-bottom: solid gray 1px;
+            color: white;
+            margin-top: 16px;
+            margin-bottom: 8px;
+            padding-left: 8px;
+        }
+        .category-header-bold {
+            font-weight: bold;
             border-bottom: solid gray 1px;
             color: white;
             margin-top: 16px;
@@ -153,12 +163,12 @@ foreach ($pdfFilesAdm as $key => $pdfFile) {
   <div id="pdfList">
     
     <div class="header">
-      <div class="header-title">カルテPDF</div>
+      <div class="header-title">📄 カルテPDF</div>
     </div>
     <div class="header-shadow"></div>
 
 <?php if (count($pdfFiles) !== 0) : ?>
-    <div class="category-header">外来</div>
+    <div class="category-header-bold">🚕 外来</div>
     <div class="category-content">
       <ul>
         <?php foreach ($pdfDict as $category => $pdfs): ?>
@@ -178,7 +188,7 @@ foreach ($pdfFilesAdm as $key => $pdfFile) {
 <?php endif; ?>
 
 <?php if (count($pdfFilesAdm) !== 0) : ?>
-    <div class="category-header">入院</div>
+    <div class="category-header-bold">🏥 入院</div>
     <div class="category-content">
       <ul>
         <?php foreach ($pdfDictAdm as $category => $pdfs): ?>
