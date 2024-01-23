@@ -1,44 +1,35 @@
 <?php
 
-$users_json = file_get_contents('config/users.json');
-$users = json_decode($users_json, true);
+require_once("./auth.php");
+require_once("./getcategory.php");
+require_once("./getfoldercontents.php");
 
-$categories_json = file_get_contents('config/categories.json');
-$categories = json_decode($categories_json, true);
+/** Logger */
+require_once("./logger.php");
+$log = Logger::getInstance();
 
-function getCategory($categoryNum) {
-  global $categories;
-  if ($categoryNum >= count($categories)) {
-    return '不明';
-  }
-  return $categories[$categoryNum];
-}
-
-$pdfRootFolder = fgets(fopen('config/pdfRootFolder.txt', 'r'));
-
+/** get parameters */
 $user = isset($_POST['user']) ? $_POST['user'] : '';
 $password = isset($_POST['pass']) ? $_POST['pass'] : '';
 $foldername = isset($_POST['pid']) ? $_POST['pid'] : '';
 
-if (!isset($users[$user]) || $users[$user] !== $password) {
-  header("Location: errorpage/401.html");
-  exit();
-}
+/** check user */
+isValidUserOrDie($user, $password);
+$log->info('Access log. user: ' . $user . ', pid: ' . $foldername);
 
-$pdfFolder = $pdfRootFolder . DIRECTORY_SEPARATOR . $foldername;
+$pdfFiles = getFolderContents($foldername, 'out');
+$pdfFilesAdm = getFolderContents($foldername, 'adm');
 
-if (!is_dir($pdfFolder)) {
+/** file check */
+if (count($pdfFiles) === 0 && count($pdfFilesAdm) === 0) {
+  $log->error('No pdf file. pid: ' . $foldername);
   header("Location: errorpage/404.html");
   exit();
 }
 
-$pdfFiles = glob($pdfFolder . DIRECTORY_SEPARATOR . "*.pdf");
-
-if (count($pdfFiles) === 0) {
-  header("Location: errorpage/404.html");
-  exit();
-}
-
+/**
+ * Parse File info as array
+ */
 function parseFileName($pdfFile) {
   $name = basename($pdfFile);
   if (preg_match('/^(\d+)-(\d{4})(\d{2})(\d{2})-(\d+)-(\d+)\.pdf$/', $name, $matches)) {
@@ -58,8 +49,10 @@ function parseFileName($pdfFile) {
 
 $pdfDict = array();
 
+/** category directory structures */
 foreach ($pdfFiles as $key => $pdfFile) {
   $parsed = parseFileName($pdfFile);
+  $parsed['type'] = 'out';
   $category = $parsed['category'];
   if (!array_key_exists($category, $pdfDict)) {
     $pdfDict[$category] = array();
@@ -67,14 +60,27 @@ foreach ($pdfFiles as $key => $pdfFile) {
   $pdfDict[$category][] = $parsed;
 }
 
+$pdfDictAdm = array();
+
+/** category directory structures */
+foreach ($pdfFilesAdm as $key => $pdfFile) {
+  $parsed = parseFileName($pdfFile);
+  $parsed['type'] = 'adm';
+  $category = $parsed['category'];
+  if (!array_key_exists($category, $pdfDictAdm)) {
+    $pdfDictAdm[$category] = array();
+  }
+  $pdfDictAdm[$category][] = $parsed;
+}
 
 ?>
 
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" translate="no" class="notranslate">
 <head>
-    <meta charset="sjis">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google" content="notranslate" />
     <title>PDF Viewer</title>
     <style>
         html, body {
@@ -145,10 +151,13 @@ foreach ($pdfFiles as $key => $pdfFile) {
 
 <body>
   <div id="pdfList">
+    
     <div class="header">
       <div class="header-title">カルテPDF</div>
     </div>
     <div class="header-shadow"></div>
+
+<?php if (count($pdfFiles) !== 0) : ?>
     <div class="category-header">外来</div>
     <div class="category-content">
       <ul>
@@ -158,7 +167,7 @@ foreach ($pdfFiles as $key => $pdfFile) {
             <div class="category-content">
               <ul>
                 <?php foreach ($pdfs as $pdf): ?>
-                  <li><a href="#" data-pid="<?php echo $foldername; ?>" data-pdf="<?php echo basename($pdf['file']); ?>" onclick="showPDF(this); return false;" class="pdf-item"><?php echo $pdf['name']; ?></a></li>
+                  <li><a href="#" data-pid="<?php echo $foldername; ?>" data-pdf="<?php echo basename($pdf['file']); ?>" data-type="<?php echo $pdf['type']; ?>" onclick="showPDF(this); return false;" class="pdf-item"><?php echo $pdf['name']; ?></a></li>
                 <?php endforeach; ?>
               </ul>
             </div>
@@ -166,11 +175,30 @@ foreach ($pdfFiles as $key => $pdfFile) {
         <?php endforeach; ?>
       </ul>
     </div>
+<?php endif; ?>
+
+<?php if (count($pdfFilesAdm) !== 0) : ?>
     <div class="category-header">入院</div>
     <div class="category-content">
+      <ul>
+        <?php foreach ($pdfDictAdm as $category => $pdfs): ?>
+          <li>
+            <div class="category-header"><?php echo $category; ?></div>
+            <div class="category-content">
+              <ul>
+                <?php foreach ($pdfs as $pdf): ?>
+                  <li><a href="#" data-pid="<?php echo $foldername; ?>" data-pdf="<?php echo basename($pdf['file']); ?>" data-type="<?php echo $pdf['type']; ?>" onclick="showPDF(this); return false;" class="pdf-item"><?php echo $pdf['name']; ?></a></li>
+                <?php endforeach; ?>
+              </ul>
+            </div>
+          </li>
+        <?php endforeach; ?>
+      </ul>
     </div>
+<?php endif; ?>
+
   </div>
-  
+
   <div id="pdfViewer">
     <iframe id="viewer" src="" frameborder="0"></iframe>
   </div>
@@ -191,7 +219,8 @@ foreach ($pdfFiles as $key => $pdfFile) {
     function showPDF(element) {
       const pdf = element.getAttribute('data-pdf');
       const pid = element.getAttribute('data-pid');
-      document.getElementById('viewer').src = 'getpdf.php?file=' + pdf + '&pid=' + pid;
+      const typ = element.getAttribute('data-type');
+      document.getElementById('viewer').src = 'getpdf.php?file=' + pdf + '&pid=' + pid + '&type=' + typ;
       resetActive();
       element.classList.add("pdf-item-active");
     }
