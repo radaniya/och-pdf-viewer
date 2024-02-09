@@ -1,0 +1,20 @@
+version: "3.8"
+services:
+
+  php:
+    image: pdfviewer/php:8.2-apache
+    build: .
+    ports:
+      - 80:80
+    volumes:
+      - ./:/var/www/html
+      - type: bind
+        source: /nas/karte1
+        target: /var/www/html/pdf/out
+        bind:
+          propagation: shared
+      - type: bind
+        source: /nas/karte2
+        target: /var/www/html/pdf/adm
+        bind:
+          propagation: shared
