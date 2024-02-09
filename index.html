@@ -17,7 +17,7 @@
       const data = {
         user: params.get('user'),  //'username1',
         pass: params.get('pass'),  //'password1',
-        pid: params.get('pid'),  //'foldername'
+        pid: Number(params.get('pid')).toString(),  //'foldername'
       };
       for (let x in data) {
         if (data[x] == undefined || data[x] == null) continue;
@@ -32,6 +32,7 @@
       form1.method = 'POST';
       // // ポップアップブロックを解除できれば以下を使うとよい
       // form1.target = 'new_window';
+      form1.target = '_blank';
       form1.submit();
       form1.remove();
       window.opener = window;
